@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: payment_method_revenue
+    columns:
+      - name: date
+        tests:
+          - not_null
+      - name: payment_method
+        tests:
+          - not_null
+      - name: revenue
+        tests:
+          - not_null

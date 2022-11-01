@@ -1,0 +1,6 @@
+great_expectations
+dbt-postgres
+prefect
+prefect-dbt
+prefect-great-expectations
+s3fs

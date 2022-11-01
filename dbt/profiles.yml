@@ -1,0 +1,26 @@
+config:
+  send_anonymous_usage_stats: False
+
+etl_spike:
+  outputs:
+    dev:
+      type: postgres
+      threads: 4
+      host: postgres
+      user: dbt
+      password: "password1234"
+      port: 5432
+      dbname: dbt
+      schema: public
+
+    prod:
+      type: postgres
+      threads: [1 or more]
+      host: [host]
+      port: [port]
+      user: [prod_username]
+      pass: [prod_password]
+      dbname: [dbname]
+      schema: [prod_schema]
+
+  target: dev
