@@ -36,8 +36,8 @@ services:
   #             Prefect Server            #
   # --------------------------------------#
   prefect-server:
-    image: prefecthq/prefect:2.6.4-python3.9
-    entrypoint: ["prefect", "orion", "start"]
+    image: prefecthq/prefect:2.6.6-python3.9
+    command: ["prefect", "orion", "start"]
     restart: always
     ports:
       - 4200:4200
@@ -60,7 +60,7 @@ services:
   #             Prefect Agent             #
   # --------------------------------------#
   prefect-agent:
-    image: ${PREFECT_AGENT_IMAGE}
+    image: prefecthq/prefect:2.6.6-python3.9
     command:
       - prefect
       - agent
@@ -84,16 +84,17 @@ services:
   # --------------------------------------#
   prefect-cli:
     build: ./prefect-cli 
-    #image: prefecthq/prefect:2.6.3-python3.10
     entrypoint: "bash"
     working_dir: "/root/flows"
     volumes:
       - "../prefect/flows:/root/flows"
       - ../great_expectations:/root/great_expectations
+      - ../dbt:/root/dbt
     environment:
       PREFECT_API_URL: http://prefect-server:4200/api
       PREFECT_LOGGING_LEVEL: DEBUG
       DOCKER_HOST: unix://var/run/docker.sock
+      DBT_PROFILES_DIR: /root/dbt
 #       Use PREFECT_API_KEY to use the CLI to interact with Prefect Cloud
 #     - PREFECT_API_KEY=YOUR_API_KEY
     networks:
@@ -141,6 +142,9 @@ services:
   #         Great Expectations Data Docs (WIP)  #
   # --------------------------------------#
   great_expectations:
-    image: greatexpectations/great_expectations:python-3.7-buster-ge-0.12.0
+    build: ./great_expectations 
+    working_dir: "/root"
+    entrypoint: "bash"
+    #command: "great_expectations docs build"
     volumes:
-      - ../great_expectations:/great_expectations
+      - ../great_expectations:/root/great_expectations

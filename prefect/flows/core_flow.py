@@ -8,7 +8,7 @@ def log_start(logger):
     logger.info("Starting Staging ELT")
     debug_output = trigger_dbt_cli_command(
         command="dbt debug", 
-        project_dir="../dbt/carpe_spike"
+        project_dir="../dbt/etl_spike"
     )
     logger.info(debug_output)
 
@@ -18,13 +18,13 @@ def run_snapshots():
     """
     return trigger_dbt_cli_command(
         command="dbt snapshot --models core.*", 
-        project_dir="../dbt/carpe_spike",
+        project_dir="../dbt/etl_spike",
     )
 
 def run_etl():
     return trigger_dbt_cli_command(
         command="dbt run --models core.*", 
-        project_dir="../dbt/carpe_spike"
+        project_dir="../dbt/etl_spike"
     )
 
 def run_tests():
@@ -33,7 +33,7 @@ def run_tests():
     """
     return trigger_dbt_cli_command(
         command="dbt test --models core.*", 
-        project_dir="../dbt/carpe_spike"
+        project_dir="../dbt/etl_spike"
     )
 
 

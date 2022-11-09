@@ -1,0 +1,2 @@
+great_expectations
+psycopg2-binary

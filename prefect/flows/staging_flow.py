@@ -8,7 +8,7 @@ def log_start(logger):
     logger.info("Starting Staging ELT")
     debug_output = trigger_dbt_cli_command(
         command="dbt debug", 
-        project_dir="../dbt/etl_spike"
+        project_dir="../dbt/etl_spike",
     )
     logger.info(debug_output)
 
@@ -59,7 +59,6 @@ def staging_etl_flow() -> str:
     logger.info(run_etl())
     logger.info(run_tests())
     logger.info(run_expectations())
-    return "OK"
 
 
 if __name__ == "__main__":
