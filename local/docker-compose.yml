@@ -73,7 +73,6 @@ services:
   #             Prefect Agent             #
   # --------------------------------------#
   agent:
-    #image: prefecthq/prefect:2.6.6-python3.11
     build: ./prefect-cli 
     restart: always
     entrypoint: ["prefect", "agent", "start", "-q", "default"]

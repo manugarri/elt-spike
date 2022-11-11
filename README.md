@@ -119,7 +119,35 @@ Now we can check the output
 
 
 ### Prefect Deployment
-prefect deployment build elt_flow.py:elt_flow -n elt -q default
-prefect deployment apply elt_flow-deployment.yaml
+
+Remote DAG deployment
+We can use minio to mimic s3 for flow deployment.
+
+Create a Minio bucket
+go to http://minio:9001
+login with `minioadmin` user and password
+create a bucket named prefect-flows
+
+Create a Prefect Remote File block.
+on prefect UI go to blocks, then search for remote file system block.
+
+block name: minio
+path: s3://prefect-flows/deployments
+
+Settings (Optional):
+{
+  "key": "minioadmin",
+  "secret": "minioadmin",
+  "client_kwargs": {
+    "endpoint_url": "http://minio:9000"
+  }
+}
+
+prefect deployment build test.py:test -n test -q default -sb remote-file-system/minio
+prefect deployment apply test-deployment.yaml
 
 you can now trigger it via the ui!
+
+
+prefect deployment build flows/elt_flow.py:elt_flow -n elt -q default -sb remote-file-system/minio
+prefect deployment apply elt_flow-deployment.yaml
