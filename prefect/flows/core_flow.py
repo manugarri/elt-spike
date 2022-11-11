@@ -52,7 +52,7 @@ def run_expectations():
     description="Runs flow for Core tables",
     task_runner=SequentialTaskRunner()
 )
-def core_etl_flow():
+def core_elt_flow():
     logger = get_run_logger()
     log_start(logger)
     logger.info(run_snapshots())
@@ -62,4 +62,4 @@ def core_etl_flow():
 
 
 if __name__ == "__main__":
-    core_etl_flow()
+    core_elt_flow()

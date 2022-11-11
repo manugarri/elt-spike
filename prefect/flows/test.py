@@ -1,11 +1,9 @@
-from prefect import flow
-from prefect_great_expectations import run_checkpoint_validation
+from prefect import flow, get_run_logger
 
 @flow
-def api_flow():
-    run_checkpoint_validation(
-        checkpoint_name="staging",
-        data_context_root_dir="../great_expectations/"
-    )
+def test():
+    logger = get_run_logger()
+    logger.info('OK')
 
-api_flow()
+
+test()

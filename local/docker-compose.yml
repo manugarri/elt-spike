@@ -1,16 +1,11 @@
-version: '3.5'
-
-networks:
-  prefect:
-    name: prefect
-
-
+version: "3.9"
 services:
+
   # --------------------------------------#
-  #               Postgres                #
+  #     Postgres data Warehouse           #
   # --------------------------------------#
   postgres:
-    image: postgres:14
+    image: postgres:14.1-alpine
     command:
       - postgres
       - -c
@@ -29,55 +24,72 @@ services:
     - published: 5433
       target: 5432
     restart: on-failure
-    networks:
-      - prefect
 
   # --------------------------------------#
-  #             Prefect Server            #
+  #             DBT CLI               #
+  # --------------------------------------#
+  dbt-cli:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.3.latest
+    entrypoint: "bash"
+    working_dir: "/root/dbt/etl_spike"
+    volumes:
+      - "../dbt:/root/dbt"
+      - ../great_expectations:/root/great_expectations
+    environment:
+      DBT_PROFILES_DIR: /root/dbt
+    profiles: ["dbt-cli"]
+
+  # --------------------------------------#
+  #         Great Expectations Data Docs  #
+  # --------------------------------------#
+  great_expectations:
+    build: ./great_expectations 
+    working_dir: "/root"
+    entrypoint: "bash"
+    #command: "great_expectations docs build"
+    volumes:
+      - ../great_expectations:/root/great_expectations
+    profiles: ["great_expectations"]
+
+  # --------------------------------------#
+  #   Prefect Orion Server                #
   # --------------------------------------#
   prefect-server:
-    image: prefecthq/prefect:2.6.6-python3.9
-    command: ["prefect", "orion", "start"]
+    image: prefecthq/prefect:2.6.6-python3.11
     restart: always
+    volumes:
+      - prefect:/root/.prefect
+    entrypoint: ["prefect", "orion", "start"]
+    environment:
+      - PREFECT_ORION_API_HOST=0.0.0.0
+      - PREFECT_ORION_DATABASE_CONNECTION_URL=postgresql+asyncpg://postgres:postgres@prefect-database:5432/orion
     ports:
       - 4200:4200
     depends_on:
-      postgres:
-        condition: service_started
-    volumes:
-      - ${PWD}/volumes/prefect:/root/.prefect
-      - ${PWD}/flows:/flows
-    environment:
-      PREFECT_ORION_API_HOST: 0.0.0.0
-      PREFECT_ORION_DATABASE_CONNECTION_URL: postgresql+asyncpg://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/$POSTGRES_DB
-      PREFECT_ORION_ANALYTICS_ENABLED: "false"
-      PREFECT_LOGGING_SERVER_LEVEL: WARNING
-      PREFECT_API_URL: http://localhost:4200/api      
-    networks:
-      - prefect
+      - prefect-database
+    profiles: ["prefect-server"]
 
   # --------------------------------------#
   #             Prefect Agent             #
   # --------------------------------------#
-  prefect-agent:
-    image: prefecthq/prefect:2.6.6-python3.9
-    command:
-      - prefect
-      - agent
-      - start
-      - -q
-      - default
-    depends_on:
-      prefect-server:
-        condition: service_started
+  agent:
+    #image: prefecthq/prefect:2.6.6-python3.11
+    build: ./prefect-cli 
+    restart: always
+    entrypoint: ["prefect", "agent", "start", "-q", "default"]
+    working_dir: "/root/flows"
+    volumes:
+      - "../prefect/flows:/root/flows"
+      - ../great_expectations:/root/great_expectations
+      - ../dbt:/root/dbt
     environment:
       PREFECT_API_URL: http://prefect-server:4200/api
-      PREFECT_LOGGING_LEVEL: DEBUG
-      DOCKER_HOST: unix://var/run/docker.sock
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - prefect
+      DBT_PROFILES_DIR: /root/dbt
+    #   Use PREFECT_API_KEY if connecting the agent to Prefect Cloud
+    #  - PREFECT_API_KEY=YOUR_API_KEY
+    depends_on:
+      - prefect-server
+    profiles: ["prefect-server"]
 
   # --------------------------------------#
   #             Prefect CLI               #
@@ -93,58 +105,45 @@ services:
     environment:
       PREFECT_API_URL: http://prefect-server:4200/api
       PREFECT_LOGGING_LEVEL: DEBUG
-      DOCKER_HOST: unix://var/run/docker.sock
       DBT_PROFILES_DIR: /root/dbt
-#       Use PREFECT_API_KEY to use the CLI to interact with Prefect Cloud
-#     - PREFECT_API_KEY=YOUR_API_KEY
-    networks:
-      - prefect
+      #Use PREFECT_API_KEY to use the CLI to interact with Prefect Cloud
+      #- PREFECT_API_KEY=YOUR_API_KEY
     profiles: ["prefect-cli"]
 
   # --------------------------------------#
-  #             DBT CLI               #
+  #       Prefect internal database       #
   # --------------------------------------#
-  dbt-cli:
-    image: ghcr.io/dbt-labs/dbt-postgres:1.3.latest
-    entrypoint: "bash"
-    working_dir: "/root/dbt/etl_spike"
-    volumes:
-      - "../dbt:/root/dbt"
-      - ../great_expectations:/root/great_expectations
+  prefect-database:
+    image: postgres:14.1-alpine
+    restart: always
     environment:
-      DBT_PROFILES_DIR: /root/dbt
-      DOCKER_HOST: unix://var/run/docker.sock
-    networks:
-      - prefect
-    profiles: ["dbt-cli"]
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=orion
+    expose:
+      - 5432
+    # if you dont have volumes you cant really add blocks or deployments
+    volumes: 
+      - db:/var/lib/postgresql/data
+    profiles: ["prefect-server"]
 
   # --------------------------------------#
-  #         Minio for storage             #
+  #   MinIO for Prefect flow storage      #
   # --------------------------------------#
   minio:
-    image: minio/minio
-    environment:
-      - MINIO_ROOT_USER=blablabla
-      - MINIO_ROOT_PASSWORD=blablabla
+    image: minio/minio:latest
+    entrypoint: ["minio", "server", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9001", "/data"]
     volumes:
-      - ./volumes/minio:/data
-    entrypoint: /bin/bash 
-    command: "-c 'mkdir -p /data/prefect-flows && sleep 10 && minio server /data --console-address :9001'"
+      - "minio:/data"
     ports:
-      - published: 9000
-        target: 9000
-      - published: 9001
-        target: 9001
-    networks:
-      - prefect
+      - 9000:9000
+      - 9001:9001
+    profiles: ["prefect-server"]
 
-  # --------------------------------------#
-  #         Great Expectations Data Docs (WIP)  #
-  # --------------------------------------#
-  great_expectations:
-    build: ./great_expectations 
-    working_dir: "/root"
-    entrypoint: "bash"
-    #command: "great_expectations docs build"
-    volumes:
-      - ../great_expectations:/root/great_expectations
+volumes:
+  prefect:
+  db:
+  minio:
+networks:
+  default:
+    name: prefect-network

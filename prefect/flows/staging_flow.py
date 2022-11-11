@@ -52,7 +52,7 @@ def run_expectations():
     description="Runs flow for Staging tables",
     task_runner=SequentialTaskRunner()
 )
-def staging_etl_flow() -> str:
+def staging_elt_flow() -> str:
     logger = get_run_logger()
     log_start(logger)
     logger.info(run_snapshot())
@@ -62,4 +62,4 @@ def staging_etl_flow() -> str:
 
 
 if __name__ == "__main__":
-    staging_etl_flow()
+    staging_elt_flow()
