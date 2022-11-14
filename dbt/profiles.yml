@@ -1,7 +1,7 @@
 config:
   send_anonymous_usage_stats: False
 
-etl_spike:
+elt_spike:
   outputs:
     dev:
       type: postgres
