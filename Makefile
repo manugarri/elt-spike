@@ -13,13 +13,13 @@ seed:
 
 down:
 	docker-compose -f ./local/docker-compose.yml --profile '' --profile prefect-server -v down && \
-	docker volume rm local_db  local_prefect
+	docker volume rm local_db  local_minio local_prefect
 
 ps:
 	docker-compose -f ./local/docker-compose.yml ps
 
-prefect-cli:
-	docker-compose -f local/docker-compose.yml run prefect-cli
+cli:
+	docker-compose -f local/docker-compose.yml run cli
 
 dbt-cli:
 	docker-compose -f local/docker-compose.yml run dbt-cli

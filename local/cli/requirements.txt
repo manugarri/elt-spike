@@ -1,5 +1,6 @@
 prefect-dbt[cli]
 s3fs
+great_expectations
 prefect-great-expectations
 dbt-postgres
 psycopg2-binary

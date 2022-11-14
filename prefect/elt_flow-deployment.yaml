@@ -1,0 +1,59 @@
+###
+### A complete description of a Prefect Deployment for flow 'ELT'
+###
+name: elt
+description: Runs flow for all tables
+version: 1.0.0
+# The work queue that will handle this deployment's runs
+work_queue_name: default
+tags: []
+parameters: {}
+#schedule: 0 0 * * *
+schedule:
+  cron: 0 0 * * *
+  timezone: US/Pacific
+infra_overrides: {}
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command: null
+  stream_output: true
+  working_dir: null
+  block_type_slug: process
+  _block_type_slug: process
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: ELT
+manifest_path: null
+storage:
+  basepath: s3://prefect-flows/dev
+  settings:
+    key: minioadmin
+    secret: minioadmin
+    client_kwargs:
+      endpoint_url: http://minio:9000
+  _block_document_id: b4b1d219-68be-4bc2-aed7-0960d7effb9a
+  _block_document_name: dev
+  _is_anonymous: false
+  block_type_slug: remote-file-system
+  _block_type_slug: remote-file-system
+path: ''
+entrypoint: flows/elt_flow.py:elt_flow
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    dbt_dir:
+      title: dbt_dir
+      default: dbt/etl_spike
+      type: string
+    ge_dir:
+      title: ge_dir
+      default: great_expectations/
+      type: string
+  required: null
+  definitions: null
