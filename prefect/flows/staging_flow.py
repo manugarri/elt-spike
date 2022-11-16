@@ -50,7 +50,7 @@ def run_expectations(ge_dir):
 @flow(
     name="Staging ELT",
     description="Runs flow for Staging tables",
-    task_runner=SequentialTaskRunner(),
+    #task_runner=SequentialTaskRunner(),
     version="1.0.1"
 )
 def staging_elt_flow(dbt_dir: str="../dbt/etl_spike", ge_dir: str="../great_expectations/"):
@@ -60,6 +60,7 @@ def staging_elt_flow(dbt_dir: str="../dbt/etl_spike", ge_dir: str="../great_expe
     logger.info(run_etl(dbt_dir))
     logger.info(run_tests(dbt_dir))
     logger.info(run_expectations(ge_dir))
+    return "OK"
 
 
 if __name__ == "__main__":

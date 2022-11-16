@@ -1,0 +1,67 @@
+###
+### A complete description of a Prefect Deployment for flow 'ELT'
+###
+name: elt
+description: Runs flow for all tables
+version: 1.0.0
+# The work queue that will handle this deployment's runs
+work_queue_name: default
+tags: []
+parameters:
+  ge_dir: great_expectations
+  dbt_dir: dbt/etl_spike
+schedule: null
+infra_overrides: {}
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: ELT
+manifest_path: null
+infrastructure:
+  type: docker-container
+  env: {}
+  labels: {}
+  name: null
+  command: null
+  image: prefecthq/prefect:2.6.6-python3.10
+  image_pull_policy: null
+  image_registry: null
+  networks: []
+  network_mode: null
+  auto_remove: false
+  volumes: []
+  stream_output: true
+  _block_document_id: 6c8f897f-91bb-4529-b8e7-a57887f04a54
+  _block_document_name: core
+  _is_anonymous: false
+  block_type_slug: docker-container
+  _block_type_slug: docker-container
+storage:
+  basepath: s3://prefect-flows/dev
+  settings:
+    key: minioadmin
+    secret: minioadmin
+    client_kwargs:
+      endpoint_url: http://minio:9000
+  _block_document_id: 4077aca7-8d6e-4fee-9b24-89c645fbf534
+  _block_document_name: dev
+  _is_anonymous: false
+  block_type_slug: remote-file-system
+  _block_type_slug: remote-file-system
+path: ''
+entrypoint: flows/elt_flow.py:elt_flow
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    dbt_dir:
+      title: dbt_dir
+      default: ../dbt/etl_spike
+      type: string
+    ge_dir:
+      title: ge_dir
+      default: ../great_expectations/
+      type: string
+  required: null
+  definitions: null

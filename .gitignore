@@ -1,1 +1,6 @@
 .env
+logs
+__pycache__
+great_expectations/notebooks/
+.envrc
+great_expectations/plugins
